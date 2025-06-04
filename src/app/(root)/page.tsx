@@ -19,7 +19,7 @@ export default async function Home() {
   console.log("=> session: ", session);
 
   return (
-    <div className="container mx-auto overflow-auto scroll-auto px-4 py-8">
+    <div className="container mx-auto h-[calc(100vh-80px)] overflow-y-auto px-4 py-8">
       <section className="mb-8">
         <h1 className="text-3xl font-black">Esta semana</h1>
         <span>Horarios disponibles del {getCurrentWeekRange()}</span>
@@ -31,7 +31,7 @@ export default async function Home() {
         ))}
       </section>
 
-      <Button size="lg" className="bg-chart-2 w-full">
+      <Button size="lg" className="bg-chart-2 mb-4 w-full">
         Modificar mis horarios
       </Button>
     </div>
