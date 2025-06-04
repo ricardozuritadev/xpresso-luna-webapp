@@ -1,18 +1,9 @@
 import { auth } from "@/lib/auth";
 import { getCurrentWeekRange } from "@/lib/helpers";
+import { userSchedule } from "@/data/week-days.mock";
 
-import ScheduleCard from "@/components/cards/schedule-card";
 import { Button } from "@/components/ui/button";
-
-const weekDays = [
-  { day: "Lunes", hours: ["18:00 - 22:00"] },
-  { day: "Martes", hours: [] },
-  { day: "Miércoles", hours: ["18:00 - 22:00"] },
-  { day: "Jueves", hours: ["18:00 - 22:00"] },
-  { day: "Viernes", hours: [] },
-  { day: "Sábado", hours: ["18:00 - 22:00"] },
-  { day: "Domingo", hours: ["18:00 - 22:00"] },
-];
+import ScheduleCard from "@/components/cards/schedule-card";
 
 export default async function Home() {
   const session = await auth();
@@ -26,12 +17,12 @@ export default async function Home() {
       </section>
 
       <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {weekDays.map((item) => (
+        {userSchedule.map((item) => (
           <ScheduleCard key={item.day} day={item.day} hours={item.hours} />
         ))}
       </section>
 
-      <Button size="lg" className="bg-chart-2 mb-4 w-full">
+      <Button size="lg" className="bg-chart-2 mb-4 w-full font-bold">
         Modificar mis horarios
       </Button>
     </div>
