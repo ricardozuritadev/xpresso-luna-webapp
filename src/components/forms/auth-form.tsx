@@ -71,7 +71,7 @@ export function AuthForm<T extends FieldValues>({
                       field.name === "email"
                         ? "marito_el_guaso@email.com"
                         : field.name === "username"
-                          ? "Little Paper"
+                          ? "little_paper"
                           : "Mete bien la contraseña"
                     }
                   />
