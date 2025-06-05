@@ -1,23 +1,24 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
 import Image from "next/image";
 import { Button } from "../ui/button";
-import { ROUTES } from "@/constants/routes.constants";
 import { toast } from "sonner";
-import { signIn } from "next-auth/react";
 
 export default function SocialAuthForm() {
-  async function handleGoogleSignIn(provider = "google") {
-    try {
-      await signIn(provider, {
-        callbackUrl: ROUTES.HOME,
-      });
-    } catch (error) {
-      console.error("Error during Google sign-in:", error);
+  const handleGoogleSignIn = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${location.origin}`,
+      },
+    });
 
-      toast("Event has been created.");
+    if (error) {
+      console.error("Error during Google sign-in:", error);
+      toast.error("Error al iniciar sesión con Google.");
     }
-  }
+  };
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
@@ -25,7 +26,7 @@ export default function SocialAuthForm() {
         className="w-full"
         variant="secondary"
         size="lg"
-        onClick={() => handleGoogleSignIn()}
+        onClick={handleGoogleSignIn}
       >
         <span>Entrar con Google</span>
         <Image src="/icons/google.svg" alt="Google" width={20} height={20} />

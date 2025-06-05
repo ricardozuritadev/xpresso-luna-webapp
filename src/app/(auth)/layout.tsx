@@ -1,4 +1,3 @@
-import SocialAuthForm from "@/components/forms/social-auth-form";
 import { ReactNode } from "react";
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
@@ -8,8 +7,6 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <h1 className="text-center text-2xl">Xpresso Luna</h1>
 
         {children}
-
-        <SocialAuthForm />
       </section>
     </main>
   );
