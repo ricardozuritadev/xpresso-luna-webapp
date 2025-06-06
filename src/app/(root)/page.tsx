@@ -99,9 +99,16 @@ export default function Home() {
         </section>
       )}
 
-      <Button size="lg" className="bg-chart-2 mb-4 w-full font-bold">
-        Modificar mis horarios
-      </Button>
+      <div
+        className="container mx-auto flex h-[calc(100vh-80px)] flex-col justify-between overflow-y-auto px-4 py-8"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
+        }}
+      >
+        <Button size="lg" className="bg-chart-2 mb-4 w-full font-bold">
+          Modificar mis horarios
+        </Button>
+      </div>
     </div>
   );
 }

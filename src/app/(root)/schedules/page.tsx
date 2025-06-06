@@ -135,13 +135,20 @@ export default function SchedulePage() {
         </>
       )}
 
-      <Button
-        size="lg"
-        className="bg-chart-2 mb-4 w-full font-bold"
-        onClick={handleSave}
+      <div
+        className="container mx-auto flex h-[calc(100vh-80px)] flex-col justify-between overflow-y-auto px-4 py-8"
+        style={{
+          paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 2rem)",
+        }}
       >
-        Guardar
-      </Button>
+        <Button
+          size="lg"
+          className="bg-chart-2 mb-4 w-full font-bold"
+          onClick={handleSave}
+        >
+          Guardar
+        </Button>
+      </div>
     </div>
   );
 }
