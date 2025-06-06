@@ -1,98 +1,83 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useUser } from "@/hooks/use-user";
-import { supabase } from "@/lib/supabase";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import SchedulePick from "@/components/cards/schedule-pick";
-
-type DayAvailability = {
-  start: string;
-  end: string;
-};
-
-const defaultAvailability: Record<string, DayAvailability> = {
-  lunes: { start: "", end: "" },
-  martes: { start: "", end: "" },
-  miércoles: { start: "", end: "" },
-  jueves: { start: "", end: "" },
-  viernes: { start: "", end: "" },
-  sábado: { start: "", end: "" },
-  domingo: { start: "", end: "" },
-};
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+import { useUser } from "@/hooks/use-user";
+import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import { DayOfWeek, defaultAvailability } from "@/types";
+import { convertTo12Hour } from "@/lib/helpers";
+import { timeSlots } from "@/data/week-days.mock";
+import { Loader2 } from "lucide-react";
 
 export default function SchedulePage() {
   const { user } = useUser();
   const [availability, setAvailability] = useState(defaultAvailability);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user?.id) return;
-
     const fetchAvailability = async () => {
+      if (!user?.id) return;
       const { data, error } = await supabase
         .from("availability")
-        .select("*")
+        .select("day_of_week, start_hour, end_hour")
         .eq("user_id", user.id);
 
       if (error) {
-        toast.error("Error al cargar horarios.");
+        console.error("Error al cargar disponibilidad:", error.message);
         return;
       }
 
-      const mapped = { ...defaultAvailability };
+      const transformed: Record<DayOfWeek, { start: string; end: string }> = {
+        ...defaultAvailability,
+      };
 
-      data?.forEach((slot) => {
-        const day = slot.day_of_week.toLowerCase();
-        if (mapped[day]) {
-          mapped[day] = {
-            start: slot.start_hour.slice(0, 5),
-            end: slot.end_hour.slice(0, 5),
-          };
+      data.forEach(({ day_of_week, start_hour, end_hour }) => {
+        const startIndex = timeSlots.findIndex((slot) =>
+          slot.startsWith(convertTo12Hour(start_hour)),
+        );
+        const endIndex = timeSlots.findIndex((slot) =>
+          slot.endsWith(convertTo12Hour(end_hour)),
+        );
+
+        if (startIndex !== -1 && endIndex !== -1) {
+          const [start] = timeSlots[startIndex].split(" - ");
+          const [, end] = timeSlots[endIndex].split(" - ");
+          transformed[day_of_week as DayOfWeek] = { start, end };
         }
       });
 
-      setAvailability(mapped);
+      setAvailability(transformed);
+      setIsLoading(false);
     };
 
     fetchAvailability();
   }, [user?.id]);
 
-  const handleChange = (day: string, field: "start" | "end", value: string) => {
-    setAvailability((prev) => ({
-      ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value,
-      },
-    }));
-  };
-
   const handleSave = async () => {
     if (!user?.id) return;
 
     for (const [day, { start, end }] of Object.entries(availability)) {
-      const startEmpty = !start;
-      const endEmpty = !end;
-
-      if ((startEmpty && !endEmpty) || (!startEmpty && endEmpty)) {
-        toast.error(`Selecciona inicio y fin para el día "${day}"`);
+      if (start && !end) {
+        toast.error(`Selecciona la hora de fin para ${day}.`);
         return;
       }
 
-      if (!startEmpty && !endEmpty && start >= end) {
+      if (!start && end) {
+        toast.error(`Selecciona la hora de inicio para ${day}.`);
+        return;
+      }
+
+      if (start && end && start >= end) {
         toast.error(
-          `La hora de inicio debe ser menor que la de fin en "${day}"`,
+          `La hora de inicio debe ser menor que la de fin en ${day}.`,
         );
         return;
       }
     }
 
-    // Eliminar horarios anteriores
-    await supabase.from("availability").delete().eq("user_id", user.id);
-
-    // Insertar nuevos
-    const toInsert = Object.entries(availability)
+    const updates = Object.entries(availability)
       .filter(([, { start, end }]) => start && end)
       .map(([day, { start, end }]) => ({
         user_id: user.id,
@@ -101,26 +86,54 @@ export default function SchedulePage() {
         end_hour: end,
       }));
 
-    if (toInsert.length > 0) {
-      const { error } = await supabase.from("availability").insert(toInsert);
-      if (error) {
+    const { error } = await supabase
+      .from("availability")
+      .delete()
+      .eq("user_id", user.id);
+
+    if (error) {
+      toast.error("Error al guardar disponibilidad.");
+      console.error(error.message);
+      return;
+    }
+
+    if (updates.length > 0) {
+      const { error: insertError } = await supabase
+        .from("availability")
+        .insert(updates);
+
+      if (insertError) {
         toast.error("Error al guardar disponibilidad.");
-        console.error(error.message);
+        console.error(insertError.message);
       } else {
         toast.success("Disponibilidad guardada con éxito.");
       }
     } else {
-      toast.info("No seleccionaste ningún horario.");
+      toast.success("No seleccionaste horarios. Disponibilidad vacía.");
     }
   };
 
   return (
     <div className="container mx-auto flex h-[calc(100vh-80px)] flex-col justify-between overflow-y-auto px-4 py-8">
-      <h2 className="mb-8 text-2xl font-black">
-        Elige tus horarios disponibles
-      </h2>
+      <h2 className="mb-4 text-2xl font-black">Disponibilidad</h2>
 
-      <SchedulePick availability={availability} onChange={handleChange} />
+      {isLoading ? (
+        <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
+          <p className="mb-4">Cargando horarios...</p>
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+        </div>
+      ) : (
+        <>
+          <p className="text-muted-foreground mb-4">
+            Si no estás disponible en un día, simplemente deja las horas en
+            blanco.
+          </p>
+          <SchedulePick
+            availability={availability}
+            setAvailability={setAvailability}
+          />
+        </>
+      )}
 
       <Button
         size="lg"

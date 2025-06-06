@@ -1,22 +1,21 @@
 "use client";
 
-import { getCurrentWeekRange } from "@/lib/helpers";
-
-import { Button } from "@/components/ui/button";
-import ScheduleCard from "@/components/cards/schedule-card";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { getMatchingTimeSlots, getVotesMap } from "@/lib/queries";
 import { useUser } from "@/hooks/use-user";
+import { convertTo12Hour, getCurrentWeekRange } from "@/lib/helpers";
+import { Button } from "@/components/ui/button";
+import ScheduleCard from "@/components/cards/schedule-card";
+import { getMatchingTimeSlots, getVotesMap } from "@/lib/queries";
+import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const [schedule, setSchedule] = useState<Record<string, string[]>>({});
   const [votes, setVotes] = useState<Map<string, number>>(new Map());
+  const [isLoading, setIsLoading] = useState(true);
 
   const { user } = useUser();
 
-  // Sinc user profile with Supabase
-  // This ensures that the user profile is created in the "profiles" table
   useEffect(() => {
     const syncProfile = async () => {
       const {
@@ -49,7 +48,6 @@ export default function Home() {
         const slots = await getMatchingTimeSlots();
         const votesMap = await getVotesMap();
 
-        // Agrupar por día
         const grouped: Record<string, string[]> = {};
         interface Slot {
           day_of_week: string;
@@ -58,7 +56,7 @@ export default function Home() {
         }
 
         (slots as Slot[]).forEach((slot: Slot) => {
-          const hourLabel: string = `${slot.start_hour} - ${slot.end_hour}`;
+          const hourLabel: string = `${convertTo12Hour(slot.start_hour)} - ${convertTo12Hour(slot.end_hour)}`;
           if (!grouped[slot.day_of_week]) grouped[slot.day_of_week] = [];
           grouped[slot.day_of_week].push(hourLabel);
         });
@@ -67,6 +65,8 @@ export default function Home() {
         setVotes(votesMap);
       } catch (err) {
         console.error("Error al cargar horarios:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -77,20 +77,27 @@ export default function Home() {
     <div className="container mx-auto h-[calc(100vh-80px)] overflow-y-auto px-4 py-8">
       <section className="mb-8">
         <h1 className="text-3xl font-black">Esta semana</h1>
-        <span>Horarios disponibles del {getCurrentWeekRange()}</span>
+        <span>Horarios que coincidimos del {getCurrentWeekRange()}</span>
       </section>
 
-      <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {Object.entries(schedule).map(([day, hours]) => (
-          <ScheduleCard
-            key={day}
-            day={day}
-            hours={hours}
-            votes={votes}
-            userId={user?.id}
-          />
-        ))}
-      </section>
+      {isLoading ? (
+        <div className="text-muted-foreground flex flex-col items-center justify-center py-8">
+          <p className="mb-4">Cargando horarios disponibles...</p>
+          <Loader2 className="text-muted-foreground h-6 w-6 animate-spin" />
+        </div>
+      ) : (
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {Object.entries(schedule).map(([day, hours]) => (
+            <ScheduleCard
+              key={day}
+              day={day}
+              hours={hours}
+              votes={votes}
+              userId={user?.id}
+            />
+          ))}
+        </section>
+      )}
 
       <Button size="lg" className="bg-chart-2 mb-4 w-full font-bold">
         Modificar mis horarios

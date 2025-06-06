@@ -21,3 +21,40 @@ export function getCurrentWeekRange(): string {
 
   return `${formattedMonday} al ${formattedSunday}`;
 }
+
+export function convertTo24Hour(time: string): string {
+  const [timePart, meridiem] = time.split(" ");
+  const [hourStr, minuteStr] = timePart.split(":");
+  let hour = parseInt(hourStr, 10);
+
+  if (meridiem === "PM" && hour !== 12) hour += 12;
+  if (meridiem === "AM" && hour === 12) hour = 0;
+
+  return `${hour.toString().padStart(2, "0")}:${minuteStr}:00`;
+}
+
+export function convertTo12Hour(time24: string): string {
+  const [hourStr, minuteStr] = time24.split(":");
+  let hour = parseInt(hourStr);
+  const minute = parseInt(minuteStr);
+
+  const meridiem = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minute.toString().padStart(2, "0")} ${meridiem}`;
+}
+
+export function parseTimeToDate(time: string): Date {
+  const [timePart, meridiem] = time.split(" ");
+  const [hourStr, minuteStr] = timePart.split(":");
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+
+  if (meridiem === "PM" && hour !== 12) hour += 12;
+  if (meridiem === "AM" && hour === 12) hour = 0;
+
+  const date = new Date();
+  date.setHours(hour, minute, 0, 0);
+
+  return date;
+}

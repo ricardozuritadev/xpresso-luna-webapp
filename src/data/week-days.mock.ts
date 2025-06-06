@@ -1,11 +1,13 @@
-export const weekDays = [
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-  "Domingo",
+import { DayOfWeek } from "@/types";
+
+export const weekDays: DayOfWeek[] = [
+  "lunes",
+  "martes",
+  "miércoles",
+  "jueves",
+  "viernes",
+  "sábado",
+  "domingo",
 ];
 
 export const timeSlots = [
@@ -21,4 +23,6 @@ export const timeSlots = [
   "7:00 PM - 8:00 PM",
   "8:00 PM - 9:00 PM",
   "9:00 PM - 10:00 PM",
+  "10:00 PM - 11:00 PM",
+  "11:00 PM - 12:00 AM",
 ];

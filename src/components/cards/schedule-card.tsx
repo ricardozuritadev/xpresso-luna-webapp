@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/lib/supabase";
-import { Checkbox } from "../ui/checkbox";
+import { toast } from "sonner";
 
 type ScheduleCardProps = {
   day: string;
@@ -17,54 +18,80 @@ export default function ScheduleCard({
   votes,
   userId,
 }: ScheduleCardProps) {
-  const [voteMap, setVoteMap] = useState<Map<string, number>>(new Map(votes));
+  const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
 
-  const toggleVote = async (day: string, start: string, end: string) => {
+  useEffect(() => {
     if (!userId) return;
 
-    const key = `${day}-${start}-${end}`;
-    const currentVotes = voteMap.get(key) || 0;
+    const loadUserVotes = async () => {
+      const { data, error } = await supabase
+        .from("votes")
+        .select("start_hour, end_hour")
+        .eq("user_id", userId)
+        .eq("day_of_week", day);
 
-    // Verificamos si ya ha votado
-    const { data: existing, error } = await supabase
-      .from("votes")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("day_of_week", day)
-      .eq("start_hour", start)
-      .eq("end_hour", end)
-      .maybeSingle();
+      if (error) {
+        console.error("Error loading votes", error);
+        return;
+      }
 
-    if (error) {
-      console.error("Error consultando voto:", error.message);
+      const newSet = new Set<string>();
+      data.forEach((vote) => {
+        const slot = `${vote.start_hour} - ${vote.end_hour}`;
+        newSet.add(slot);
+      });
+
+      setSelectedSlots(newSet);
+    };
+
+    loadUserVotes();
+  }, [userId, day]);
+
+  const handleToggle = async (slot: string) => {
+    if (!userId) {
+      toast.warning("Debes iniciar sesión para votar");
       return;
     }
 
-    if (existing) {
-      // Ya existe: eliminar
-      const { error: deleteError } = await supabase
+    const [start_hour, end_hour] = slot.split(" - ");
+
+    const isSelected = selectedSlots.has(slot);
+    const newSet = new Set(selectedSlots);
+
+    if (isSelected) {
+      newSet.delete(slot);
+
+      const { error } = await supabase
         .from("votes")
         .delete()
-        .eq("id", existing.id);
+        .eq("user_id", userId)
+        .eq("day_of_week", day)
+        .eq("start_hour", start_hour)
+        .eq("end_hour", end_hour);
 
-      if (!deleteError) {
-        voteMap.set(key, Math.max(0, currentVotes - 1));
-        setVoteMap(new Map(voteMap));
+      if (error) {
+        console.error("Error removing vote:", error);
+        toast.error("Error al quitar voto.");
+        return;
       }
     } else {
-      // No existe: insertar
-      const { error: insertError } = await supabase.from("votes").insert({
+      newSet.add(slot);
+
+      const { error } = await supabase.from("votes").insert({
         user_id: userId,
         day_of_week: day,
-        start_hour: start,
-        end_hour: end,
+        start_hour,
+        end_hour,
       });
 
-      if (!insertError) {
-        voteMap.set(key, currentVotes + 1);
-        setVoteMap(new Map(voteMap));
+      if (error) {
+        console.error("Error adding vote:", error);
+        toast.error("Error al guardar voto.");
+        return;
       }
     }
+
+    setSelectedSlots(newSet);
   };
 
   if (!hours || hours.length === 0) return null;
@@ -72,25 +99,26 @@ export default function ScheduleCard({
   return (
     <div className="flex flex-col justify-between">
       <div>
-        <h2 className="mb-2 text-lg font-bold">{day}</h2>
+        <h2 className="mb-2 text-lg font-bold capitalize">{day}</h2>
 
         <div className="border-ring flex flex-col gap-4 rounded-lg border p-4 shadow-md transition-shadow duration-300 hover:shadow-lg">
-          {hours.map((hour, index) => {
-            const [start, end] = hour.split(" - ");
-            const key = `${day}-${start}-${end}`;
-            const voteCount = voteMap.get(key) ?? 0;
+          {hours.map((hour) => {
+            const count = votes.get(`${day}:${hour}`) ?? 0;
+            const isChecked = selectedSlots.has(hour);
 
             return (
-              <div key={index} className="flex items-center justify-between">
+              <div key={hour} className="flex items-center justify-between">
                 <p className="text-chart-3">{hour}</p>
+
                 <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-sm">
+                    x{count}
+                  </span>
                   <Checkbox
                     className="border-chart-2 data-[state=checked]:border-chart-2 h-6 w-6 border"
-                    onClick={() => toggleVote(day, start, end)}
+                    checked={isChecked}
+                    onCheckedChange={() => handleToggle(hour)}
                   />
-                  <span className="text-muted-foreground text-sm">
-                    x{voteCount}
-                  </span>
                 </div>
               </div>
             );
