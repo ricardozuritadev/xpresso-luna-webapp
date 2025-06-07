@@ -101,7 +101,11 @@ export default function Home() {
         </section>
       )}
 
-      <Button size="lg" className="bg-chart-2 mb-4 w-full font-bold">
+      <Button
+        size="lg"
+        className="bg-chart-2 mb-4 w-full font-bold"
+        onClick={() => (window.location.href = "/schedules")}
+      >
         Modificar mis horarios
       </Button>
     </div>
