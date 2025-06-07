@@ -7,11 +7,10 @@ import { useUser } from "@/hooks/use-user";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { DayOfWeek, defaultAvailability } from "@/types";
-import { convertTo12Hour } from "@/lib/helpers";
-import { timeSlots } from "@/data/week-days.mock";
+import { flatHours } from "@/data/week-days.mock";
 import { Loader2 } from "lucide-react";
 
-export default function SchedulePage() {
+export default function Schedules() {
   const { user } = useUser();
   const [availability, setAvailability] = useState(defaultAvailability);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,6 +18,7 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchAvailability = async () => {
       if (!user?.id) return;
+
       const { data, error } = await supabase
         .from("availability")
         .select("day_of_week, start_hour, end_hour")
@@ -29,22 +29,14 @@ export default function SchedulePage() {
         return;
       }
 
-      const transformed: Record<DayOfWeek, { start: string; end: string }> = {
-        ...defaultAvailability,
-      };
+      const transformed = structuredClone(defaultAvailability);
 
       data.forEach(({ day_of_week, start_hour, end_hour }) => {
-        const startIndex = timeSlots.findIndex((slot) =>
-          slot.startsWith(convertTo12Hour(start_hour)),
-        );
-        const endIndex = timeSlots.findIndex((slot) =>
-          slot.endsWith(convertTo12Hour(end_hour)),
-        );
-
-        if (startIndex !== -1 && endIndex !== -1) {
-          const [start] = timeSlots[startIndex].split(" - ");
-          const [, end] = timeSlots[endIndex].split(" - ");
-          transformed[day_of_week as DayOfWeek] = { start, end };
+        if (flatHours.includes(start_hour) && flatHours.includes(end_hour)) {
+          transformed[day_of_week as DayOfWeek] = {
+            start: start_hour,
+            end: end_hour,
+          };
         }
       });
 
@@ -69,7 +61,7 @@ export default function SchedulePage() {
         return;
       }
 
-      if (start && end && start >= end) {
+      if (start && end && flatHours.indexOf(start) >= flatHours.indexOf(end)) {
         toast.error(
           `La hora de inicio debe ser menor que la de fin en ${day}.`,
         );
@@ -86,14 +78,15 @@ export default function SchedulePage() {
         end_hour: end,
       }));
 
-    const { error } = await supabase
+    // Limpiar datos previos
+    const { error: deleteError } = await supabase
       .from("availability")
       .delete()
       .eq("user_id", user.id);
 
-    if (error) {
+    if (deleteError) {
       toast.error("Error al guardar disponibilidad.");
-      console.error(error.message);
+      console.error(deleteError.message);
       return;
     }
 

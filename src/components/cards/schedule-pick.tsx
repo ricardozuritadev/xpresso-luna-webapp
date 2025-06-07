@@ -1,9 +1,10 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { timeSlots, weekDays } from "@/data/week-days.mock";
+import { flatHours, weekDays } from "@/data/week-days.mock";
 import { Dispatch, SetStateAction } from "react";
 import { DayOfWeek } from "@/types";
+import { convertTo12Hour } from "@/lib/helpers";
 
 type SchedulePickProps = {
   availability: Record<DayOfWeek, { start: string; end: string }>;
@@ -56,11 +57,16 @@ function DayTimeSelector({
     }));
   };
 
+  const startIndex = flatHours.indexOf(startTime);
+  const filteredHours =
+    startIndex !== -1 ? flatHours.slice(startIndex + 1) : flatHours;
+
   return (
     <div className="flex items-center justify-between gap-4">
       <label className="w-24 font-medium capitalize">{day}</label>
 
       <div className="flex flex-1 items-center gap-2">
+        {/* Select de inicio */}
         <select
           value={startTime}
           onChange={(e) => handleChange("start", e.target.value)}
@@ -70,18 +76,16 @@ function DayTimeSelector({
           )}
         >
           <option value="">Inicio</option>
-          {timeSlots.map((slot) => {
-            const [start] = slot.split(" - ");
-            return (
-              <option key={start} value={start}>
-                {start}
-              </option>
-            );
-          })}
+          {flatHours.map((time) => (
+            <option key={time} value={time}>
+              {convertTo12Hour(time)}
+            </option>
+          ))}
         </select>
 
         <span className="text-sm">a</span>
 
+        {/* Select de fin */}
         <select
           value={endTime}
           onChange={(e) => handleChange("end", e.target.value)}
@@ -91,23 +95,11 @@ function DayTimeSelector({
           )}
         >
           <option value="">Fin</option>
-          {(() => {
-            const startIndex = timeSlots.findIndex((slot) =>
-              slot.startsWith(startTime),
-            );
-
-            const filteredSlots =
-              startIndex !== -1 ? timeSlots.slice(startIndex + 1) : timeSlots;
-
-            return filteredSlots.map((slot) => {
-              const [, end] = slot.split(" - ");
-              return (
-                <option key={end} value={end}>
-                  {end}
-                </option>
-              );
-            });
-          })()}
+          {filteredHours.map((time) => (
+            <option key={time} value={time}>
+              {convertTo12Hour(time)}
+            </option>
+          ))}
         </select>
       </div>
     </div>

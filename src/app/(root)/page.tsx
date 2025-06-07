@@ -48,6 +48,8 @@ export default function Home() {
         const slots = await getMatchingTimeSlots();
         const votesMap = await getVotesMap();
 
+        console.log("=> slots: ", slots);
+
         const grouped: Record<string, string[]> = {};
         interface Slot {
           day_of_week: string;

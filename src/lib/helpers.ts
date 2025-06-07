@@ -34,14 +34,17 @@ export function convertTo24Hour(time: string): string {
 }
 
 export function convertTo12Hour(time24: string): string {
-  const [hourStr, minuteStr] = time24.split(":");
-  let hour = parseInt(hourStr);
-  const minute = parseInt(minuteStr);
+  const [hourStr, minuteStr = "00"] = time24.split(":");
+  const hourNum = parseInt(hourStr, 10);
+  const minuteNum = parseInt(minuteStr, 10);
 
-  const meridiem = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12;
+  if (isNaN(hourNum) || isNaN(minuteNum)) return "Invalid time";
 
-  return `${hour}:${minute.toString().padStart(2, "0")} ${meridiem}`;
+  const meridiem = hourNum >= 12 ? "PM" : "AM";
+  const displayHour = hourNum % 12 || 12;
+  const displayMinute = minuteNum.toString().padStart(2, "0");
+
+  return `${displayHour}:${displayMinute} ${meridiem}`;
 }
 
 export function parseTimeToDate(time: string): Date {
