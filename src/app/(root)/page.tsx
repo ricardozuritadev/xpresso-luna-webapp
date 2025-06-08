@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import ScheduleCard from "@/components/cards/schedule-card";
 import { getMatchingTimeSlots, getVotesMap } from "@/lib/queries";
 import { Loader2 } from "lucide-react";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { NextRehearsalPicker } from "@/components/forms/next-rehersal-picker";
 
 export default function Home() {
