@@ -16,7 +16,7 @@ export default function Navigation() {
   ];
 
   return (
-    <section className="bg-card fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between px-8 py-6 shadow-md">
+    <section className="bg-card fixed right-0 bottom-0 left-0 z-50 flex items-center justify-between px-8 py-4 shadow-md">
       {navItems.map(({ href, icon: Icon, label }) => {
         const isActive = pathname === href;
 

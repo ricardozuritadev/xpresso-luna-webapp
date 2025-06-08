@@ -19,7 +19,6 @@ export async function getMatchingTimeSlots() {
   const userSlots = new Map<string, Map<string, Set<string>>>();
 
   for (const row of data as Slot[]) {
-    console.log("userSlots:", userSlots);
     const { user_id, day_of_week, start_hour, end_hour } = row;
 
     const startIdx = flatHours.indexOf(start_hour);
@@ -111,4 +110,56 @@ export async function getVotesMap(): Promise<Map<string, number>> {
   });
 
   return map;
+}
+
+export async function getNextRehearsal() {
+  const { data, error } = await supabase
+    .from("rehearsals")
+    .select("*")
+    .eq("singleton", true)
+    .single();
+
+  if (error && error.code !== "PGRST116") {
+    console.error("Error al obtener repaso:", error.message);
+    return null;
+  }
+
+  return data;
+}
+
+export async function setNextRehearsal(
+  date: string,
+  start: string,
+  end: string,
+  lastUpdatedAt?: string,
+) {
+  const { data } = await supabase
+    .from("rehearsals")
+    .select("updated_at")
+    .eq("singleton", true)
+    .single();
+
+  if (data && lastUpdatedAt && data.updated_at !== lastUpdatedAt) {
+    throw new Error("conflict");
+  }
+
+  const { error: upsertError } = await supabase.from("rehearsals").upsert(
+    [
+      {
+        singleton: true,
+        date,
+        start_time: start,
+        end_time: end,
+        updated_at: new Date().toISOString(),
+      },
+    ],
+    { onConflict: "singleton" },
+  );
+
+  if (upsertError) {
+    console.error("Error guardando repaso:", upsertError.message);
+    throw new Error("insert_failed");
+  }
+
+  return true;
 }

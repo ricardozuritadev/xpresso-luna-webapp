@@ -107,7 +107,7 @@ export default function Schedules() {
   };
 
   return (
-    <div className="container mx-auto flex h-[calc(100vh-80px)] flex-col justify-between overflow-y-auto px-4 py-8">
+    <div className="container mx-auto flex min-h-screen flex-col px-4 pt-8 pb-24">
       <h2 className="mb-4 text-2xl font-black">Disponibilidad</h2>
 
       {isLoading ? (

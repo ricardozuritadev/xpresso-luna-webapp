@@ -1,4 +1,5 @@
 "use client";
+
 import type { User } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/use-user";
@@ -62,7 +63,7 @@ export default function ProfilePage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
-      <div className="flex flex-col items-center space-y-6">
+      <div className="flex flex-col items-center space-y-6 text-center">
         <Avatar className="h-24 w-24">
           <AvatarImage src={avatarUrl} alt="Avatar" />
           <AvatarFallback>
@@ -70,7 +71,7 @@ export default function ProfilePage() {
           </AvatarFallback>
         </Avatar>
 
-        <h1 className="text-2xl font-bold">{profile?.full_name}</h1>
+        <h1 className="text-center text-2xl font-bold">{profile?.full_name}</h1>
 
         <Button onClick={handleLogout} className="bg-destructive text-white">
           Cerrar sesión

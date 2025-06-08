@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import ScheduleCard from "@/components/cards/schedule-card";
 import { getMatchingTimeSlots, getVotesMap } from "@/lib/queries";
 import { Loader2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { NextRehearsalPicker } from "@/components/forms/next-rehersal-picker";
 
 export default function Home() {
   const [schedule, setSchedule] = useState<Record<string, string[]>>({});
@@ -48,8 +51,6 @@ export default function Home() {
         const slots = await getMatchingTimeSlots();
         const votesMap = await getVotesMap();
 
-        console.log("=> slots: ", slots);
-
         const grouped: Record<string, string[]> = {};
         interface Slot {
           day_of_week: string;
@@ -76,11 +77,16 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="container mx-auto h-[calc(100vh-80px)] overflow-y-auto px-4 py-8">
+    <div className="container mx-auto flex min-h-screen flex-col px-4 pt-8 pb-24">
       <section className="mb-8">
         <h1 className="text-3xl font-black">Esta semana</h1>
-        <span>Horarios que coincidimos del {getCurrentWeekRange()}</span>
       </section>
+
+      <NextRehearsalPicker />
+
+      <p className="mb-4">
+        Horarios que coincidimos del {getCurrentWeekRange()}:
+      </p>
 
       {isLoading ? (
         <div className="text-muted-foreground flex flex-col items-center justify-center py-8">

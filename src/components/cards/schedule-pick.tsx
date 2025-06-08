@@ -62,7 +62,7 @@ function DayTimeSelector({
     startIndex !== -1 ? flatHours.slice(startIndex + 1) : flatHours;
 
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className="mb-6 flex items-center justify-between">
       <label className="w-24 font-medium capitalize">{day}</label>
 
       <div className="flex flex-1 items-center gap-2">
