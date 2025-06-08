@@ -1,10 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
-
 type ScheduleCardProps = {
   day: string;
   hours: string[];
@@ -12,87 +7,82 @@ type ScheduleCardProps = {
   userId?: string;
 };
 
-export default function ScheduleCard({
-  day,
-  hours,
-  votes,
-  userId,
-}: ScheduleCardProps) {
-  const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
+export default function ScheduleCard({ day, hours }: ScheduleCardProps) {
+  //   const [selectedSlots, setSelectedSlots] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (!userId) return;
+  //   useEffect(() => {
+  //     if (!userId) return;
 
-    const loadUserVotes = async () => {
-      const { data, error } = await supabase
-        .from("votes")
-        .select("start_hour, end_hour")
-        .eq("user_id", userId)
-        .eq("day_of_week", day);
+  //     const loadUserVotes = async () => {
+  //       const { data, error } = await supabase
+  //         .from("votes")
+  //         .select("start_hour, end_hour")
+  //         .eq("user_id", userId)
+  //         .eq("day_of_week", day);
 
-      if (error) {
-        console.error("Error loading votes", error);
-        return;
-      }
+  //       if (error) {
+  //         console.error("Error loading votes", error);
+  //         return;
+  //       }
 
-      const newSet = new Set<string>();
-      data.forEach((vote) => {
-        const slot = `${vote.start_hour} - ${vote.end_hour}`;
-        newSet.add(slot);
-      });
+  //       const newSet = new Set<string>();
+  //       data.forEach((vote) => {
+  //         const slot = `${vote.start_hour} - ${vote.end_hour}`;
+  //         newSet.add(slot);
+  //       });
 
-      setSelectedSlots(newSet);
-    };
+  //       setSelectedSlots(newSet);
+  //     };
 
-    loadUserVotes();
-  }, [userId, day]);
+  //     loadUserVotes();
+  //   }, [userId, day]);
 
-  const handleToggle = async (slot: string) => {
-    if (!userId) {
-      toast.warning("Debes iniciar sesión para votar");
-      return;
-    }
+  //   const handleToggle = async (slot: string) => {
+  //     if (!userId) {
+  //       toast.warning("Debes iniciar sesión para votar");
+  //       return;
+  //     }
 
-    const [start_hour, end_hour] = slot.split(" - ");
+  //     const [start_hour, end_hour] = slot.split(" - ");
 
-    const isSelected = selectedSlots.has(slot);
-    const newSet = new Set(selectedSlots);
+  //     const isSelected = selectedSlots.has(slot);
+  //     const newSet = new Set(selectedSlots);
 
-    if (isSelected) {
-      newSet.delete(slot);
+  //     if (isSelected) {
+  //       newSet.delete(slot);
 
-      const { error } = await supabase
-        .from("votes")
-        .delete()
-        .eq("user_id", userId)
-        .eq("day_of_week", day)
-        .eq("start_hour", start_hour)
-        .eq("end_hour", end_hour);
+  //       const { error } = await supabase
+  //         .from("votes")
+  //         .delete()
+  //         .eq("user_id", userId)
+  //         .eq("day_of_week", day)
+  //         .eq("start_hour", start_hour)
+  //         .eq("end_hour", end_hour);
 
-      if (error) {
-        console.error("Error removing vote:", error);
-        toast.error("Error al quitar voto.");
-        return;
-      }
-    } else {
-      newSet.add(slot);
+  //       if (error) {
+  //         console.error("Error removing vote:", error);
+  //         toast.error("Error al quitar voto.");
+  //         return;
+  //       }
+  //     } else {
+  //       newSet.add(slot);
 
-      const { error } = await supabase.from("votes").insert({
-        user_id: userId,
-        day_of_week: day,
-        start_hour,
-        end_hour,
-      });
+  //       const { error } = await supabase.from("votes").insert({
+  //         user_id: userId,
+  //         day_of_week: day,
+  //         start_hour,
+  //         end_hour,
+  //       });
 
-      if (error) {
-        console.error("Error adding vote:", error);
-        toast.error("Error al guardar voto.");
-        return;
-      }
-    }
+  //       if (error) {
+  //         console.error("Error adding vote:", error);
+  //         toast.error("Error al guardar voto.");
+  //         return;
+  //       }
+  //     }
 
-    setSelectedSlots(newSet);
-  };
+  //     setSelectedSlots(newSet);
+  //   };
 
   if (!hours || hours.length === 0) return null;
 
@@ -103,22 +93,22 @@ export default function ScheduleCard({
 
         <div className="border-ring flex flex-col gap-4 rounded-lg border p-4 shadow-md transition-shadow duration-300 hover:shadow-lg">
           {hours.map((hour) => {
-            const count = votes.get(`${day}:${hour}`) ?? 0;
-            const isChecked = selectedSlots.has(hour);
+            // const count = votes.get(`${day}:${hour}`) ?? 0;
+            // const isChecked = selectedSlots.has(hour);
 
             return (
               <div key={hour} className="flex items-center justify-between">
                 <p className="text-chart-3">{hour}</p>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-sm">
+                  {/* <span className="text-muted-foreground text-sm">
                     x{count}
-                  </span>
-                  <Checkbox
+                  </span> */}
+                  {/* <Checkbox
                     className="border-chart-2 data-[state=checked]:border-chart-2 h-6 w-6 border"
                     checked={isChecked}
                     onCheckedChange={() => handleToggle(hour)}
-                  />
+                  /> */}
                 </div>
               </div>
             );
